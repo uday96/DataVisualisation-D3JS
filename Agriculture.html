@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<p><h1>Sector-wise Physical Performance of Districts - Based on Sample Survey, 2010</h1></p>
+<style>
+
+/*
+.chart rect {
+  fill: steelblue;
+}
+*/
+.chart .legend {
+  fill: black;
+  font: 14px sans-serif;
+  text-anchor: start;
+  font-size: 12px;
+}
+
+.chart text {
+  fill: white;
+  font: 10px sans-serif;
+  text-anchor: end;
+}
+
+.chart .label {
+  fill: black;
+  font: 14px sans-serif;
+  text-anchor: end;
+}
+
+.bar:hover {
+  fill: brown;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+
+</style>
+<p><h3><b>Agriculture</b></h3></p>
+<svg class="chart"></svg>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var mydata = {
+  fields: [
+    {
+      id: "a",
+      label: "District",
+      type: "string"
+    },
+    {
+      id: "b",
+      label: "Number of Works",
+      type: "string"
+    },
+    {
+      id: "c",
+      label: "Number of Completed Works",
+      type: "string"
+    },
+    {
+      id: "d",
+      label: "Achievement (in %)",
+      type: "string"
+    },
+  ],
+  data: [
+    [
+      "Sitapur",
+      "62",
+      "59",
+      "95%",
+    ],
+    [
+      "Chandauli",
+      "132",
+      "123",
+      "93%",
+    ],
+    [
+      "Banswara",
+      "1182",
+      "1179",
+      "100%",
+    ],
+    [
+      "Saraikela",
+      "212",
+      "212",
+      "100%",
+    ],
+    [
+      "Chatra",
+      "203",
+      "200",
+      "99%",
+    ],
+    [
+      "Lohardaga",
+      "2106",
+      "1969",
+      "93%",
+    ],
+    [
+      "Ganjam",
+      "2009",
+      "1956",
+      "97%",
+    ],
+    [
+      "Mayurbhanj",
+      "252",
+      "251",
+      "100%",
+    ],
+    [
+      "Warangal",
+      "37",
+      "32",
+      "86%",
+    ],
+    [
+      "Chamba",
+      "148",
+      "145",
+      "98%",
+    ],
+    [
+      "Mon",
+      "0",
+      "0",
+      "0%",
+    ],
+    [
+      "Dhindori",
+      "599",
+      "599",
+      "100%",
+    ],
+    [
+      "Bastar",
+      "768",
+      "653",
+      "85%",
+    ]
+  ]
+};
+
+var data = {
+  labels: [],
+  series: []
+};
+
+for (var i=1; i<mydata.fields.length; i++) {
+  data.labels.push(mydata.fields[i].label);
+}
+for (var i=0; i<mydata.data.length; i++) {
+  var val = []
+  for (var j=1; j<mydata.data[i].length; j++) {
+    val.push(parseInt(mydata.data[i][j]));
+  }
+  data.series.push({label: mydata.data[i][0],values: val});
+}
+
+var chartWidth       = 1500,
+    barHeight        = 20,
+    groupHeight      = barHeight * data.series.length,
+    gapBetweenGroups = 10,
+    spaceForLabels   = 150,
+    spaceForLegend   = 150;
+
+// Zip the series data together (first values, second values, etc.)
+var zippedData = [];
+for (var i=0; i<data.labels.length; i++) {
+  for (var j=0; j<data.series.length; j++) {
+    zippedData.push(data.series[j].values[i]);
+  }
+}
+
+// Color scale
+var color = d3.scale.category20();
+var chartHeight = barHeight * zippedData.length + gapBetweenGroups * data.labels.length;
+
+var x = d3.scale.linear()
+    .domain([0, d3.max(zippedData)])
+    .range([0, chartWidth]);
+
+var y = d3.scale.linear()
+    .range([chartHeight + gapBetweenGroups, 0]);
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .tickFormat('')
+    .tickSize(0)
+    .orient("left");
+
+// Specify the chart area and dimensions
+var chart = d3.select(".chart")
+    .attr("width", spaceForLabels + chartWidth + spaceForLegend)
+    .attr("height", chartHeight);
+
+// Create bars
+var bar = chart.selectAll("g")
+    .data(zippedData)
+    .enter().append("g")
+    .attr("transform", function(d, i) {
+      return "translate(" + spaceForLabels + "," + (i * barHeight + gapBetweenGroups * (0.5 + Math.floor(i/data.series.length))) + ")";
+    });
+
+// Create rectangles of the correct width
+bar.append("rect")
+    .attr("fill", function(d,i) { return color(i % data.series.length); })
+    .attr("class", "bar")
+    .attr("width", x)
+    .attr("height", barHeight - 1);
+
+// Add text label in bar
+bar.append("text")
+    .attr("x", function(d) { return x(d) - 3; })
+    .attr("y", barHeight / 2)
+    .attr("fill", "red")
+    .attr("dy", ".35em")
+    .text(function(d) { return d; });
+
+// Draw labels
+bar.append("text")
+    .attr("class", "label")
+    .attr("x", function(d) { return - 10; })
+    .attr("y", groupHeight / 2)
+    .attr("dy", ".35em")
+    .text(function(d,i) {
+      if (i % data.series.length === 0)
+        return data.labels[Math.floor(i/data.series.length)];
+      else
+        return ""});
+
+chart.append("g")
+      .attr("class", "y axis")
+      .attr("transform", "translate(" + spaceForLabels + ", " + -gapBetweenGroups/2 + ")")
+      .call(yAxis);
+
+// Draw legend
+var legendRectSize = 18,
+    legendSpacing  = 4;
+
+var legend = chart.selectAll('.legend')
+    .data(data.series)
+    .enter()
+    .append('g')
+    .attr('transform', function (d, i) {
+        var height = legendRectSize + legendSpacing;
+        var offset = -gapBetweenGroups/2;
+        var horz = spaceForLabels + chartWidth + 40 - legendRectSize;
+        var vert = i * height - offset;
+        return 'translate(' + horz + ',' + vert + ')';
+    });
+
+legend.append('rect')
+    .attr('width', legendRectSize)
+    .attr('height', legendRectSize)
+    .style('fill', function (d, i) { return color(i); })
+    .style('stroke', function (d, i) { return color(i); });
+
+legend.append('text')
+    .attr('class', 'legend')
+    .attr('x', legendRectSize + legendSpacing)
+    .attr('y', legendRectSize - legendSpacing)
+    .text(function (d) { return d.label; });
+
+</script>
+
+</body>
